@@ -1,0 +1,212 @@
+/* 🌈 Harmony Music Industry System – Light & Stylish Theme */
+
+/* General Page Styling */
+body {
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  background: #f9f9ff;
+  color: #333;
+  margin: 0;
+  padding-top: 70px;
+  min-height: 100vh;
+}
+
+/* 🎵 Navbar */
+.navbar {
+  background: linear-gradient(90deg, #6C63FF, #FF6584) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px 20px;
+}
+
+.navbar .navbar-brand {
+  font-weight: 700;
+  color: #fff !important;
+  font-size: 1.4rem;
+  text-shadow: 1px 1px rgba(0,0,0,0.2);
+  letter-spacing: 0.5px;
+}
+
+.navbar .nav-link {
+  color: rgba(255,255,255,0.95) !important;
+  background: transparent !important;
+  border-radius: 20px;
+  margin-right: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.navbar .nav-link:hover {
+  color: #222 !important;
+  background: rgba(255,255,255,0.8) !important;
+  transform: translateY(-1px);
+}
+
+.navbar-collapse {
+  background: transparent !important;
+}
+
+/* 🟣 Buttons */
+.btn {
+  border-radius: 25px;
+  font-weight: 600;
+  padding: 8px 18px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #6C63FF, #FF6584);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(45deg, #FF6584, #6C63FF);
+}
+
+.btn-success {
+  background: linear-gradient(45deg, #00C853, #2afadf);
+  border: none;
+}
+
+.btn-danger {
+  background: linear-gradient(45deg, #ff1744, #ff6f00);
+  border: none;
+}
+
+.btn-warning {
+  background: linear-gradient(45deg, #ff9800, #ff5722);
+  border: none;
+  color: #fff;
+}
+
+.btn-info {
+  background: linear-gradient(45deg, #00bcd4, #3f51b5);
+  border: none;
+  color: #fff;
+}
+
+/* 💬 Forms */
+.form-control, .form-select {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  color: #333;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #6C63FF;
+  box-shadow: 0 0 8px rgba(108,99,255,0.4);
+  background: #fff;
+}
+
+/* 📊 Tables */
+.table {
+  color: #333;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+.table th {
+  background: #6C63FF;
+  color: #fff;
+}
+
+.table-striped > tbody > tr:nth-child(odd) {
+  background: #f2f2ff;
+}
+
+/* 💌 Cards */
+.card {
+  border-radius: 14px;
+  background: #fff;
+  color: #333;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 6px 18px rgba(0,0,0,0.2);
+}
+
+/* 🔔 Notifications List */
+.list-group-item {
+  background: #fff !important;
+  border: none !important;
+  border-bottom: 1px solid #eee !important;
+}
+
+.list-group-item:hover {
+  background: #f8f5ff !important;
+}
+
+/* 🎧 Audio Player */
+audio {
+  border-radius: 8px;
+  background: #eee;
+  padding: 5px;
+  margin-top: 5px;
+  width: 260px;
+}
+
+/* 🦋 Hero / Landing Section */
+.hero {
+  height: 90vh;
+  background: linear-gradient(135deg, rgba(108,99,255,0.85), rgba(255,101,132,0.85)),
+              url("banner.jpg") center/cover no-repeat;
+  color: #fff;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 3rem;
+  text-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+}
+
+.hero p {
+  font-size: 1.25rem;
+}
+
+.hero .highlight {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+/* 💬 Chat Bubbles for Collaboration Messages */
+.chat-bubble {
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 20px;
+  margin: 10px 0;
+  display: inline-block;
+}
+
+.chat-left {
+  background: #e1e1ff;
+  float: left;
+  clear: both;
+}
+
+.chat-right {
+  background: #ffe1ea;
+  float: right;
+  clear: both;
+}
+
+/* 📢 Alerts */
+.alert {
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* 🦶 Footer */
+footer {
+  background: #fff;
+  color: #555;
+  padding: 20px;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 14px;
+  border-top: 1px solid #ddd;
+}
