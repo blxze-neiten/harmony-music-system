@@ -3,38 +3,7 @@ require "../config/bootstrap.php";
 require_roles(['Artist']);
 $user = current_user();
 
-// Handle Approve/Reject
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
-    $id = $_POST['id'];
-    $action = $_POST['action'];
-    $status = $action === 'approve' ? 'accepted' : 'rejected';
-
-    $pdo->prepare("UPDATE producer_requests SET status=? WHERE id=?")->execute([$status, $id]);
-
-    // Fetch producer info
-    $row = $pdo->prepare("SELECT producer_id FROM producer_requests WHERE id=?");
-    $row->execute([$id]);
-    $producer = $row->fetch();
-
-    if ($producer) {
-        $msg = "Your collaboration request was $status by {$user['name']}.";
-        $pdo->prepare("INSERT INTO notifications (user_id, message) VALUES (?, ?)")->execute([$producer['producer_id'], $msg]);
-    }
-
-    // If approved, insert into producer_collabs
-    if ($status === 'accepted') {
-        $data = $pdo->prepare("SELECT * FROM producer_requests WHERE id=?");
-        $data->execute([$id]);
-        $req = $data->fetch();
-        $pdo->prepare("INSERT INTO producer_collabs (music_id, artist_id, producer_id) VALUES (?,?,?)")
-            ->execute([$req['music_id'], $req['artist_id'], $req['producer_id']]);
-    }
-
-    header("Location: manage.php");
-    exit;
-}
-
-// Fetch artist’s collab requests
+// Fetch artist’s collaboration requests
 $stmt = $pdo->prepare("
   SELECT pr.*, u.name AS producer_name, m.title AS song_title
   FROM producer_requests pr
@@ -44,52 +13,61 @@ $stmt = $pdo->prepare("
   ORDER BY pr.created_at DESC
 ");
 $stmt->execute([$user['id']]);
-$requests = $stmt->fetchAll();
+$requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Manage Collaborations - Harmony</title>
-  <link rel="stylesheet" href="../assets/bootstrap.min.css">
-  <link rel="stylesheet" href="../assets/style.css">
+  <title>🎧 Manage Collaborations - Harmony</title>
+  <link href="../assets/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/style.css" rel="stylesheet">
+  <style>
+    body { background: #f8f9fc; }
+    h2 { color: #6C63FF; font-weight: bold; }
+    .card { border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
+    .badge { font-size: 0.9em; border-radius: 8px; }
+    .btn-sm { border-radius: 8px; padding: 4px 12px; }
+  </style>
 </head>
 <body>
 <?php include "../includes/navbar.php"; ?>
 
 <div class="container mt-5">
-  <h2>🎶 Collaboration Requests</h2>
-  <p class="text-muted">Review and respond to collaboration requests from producers.</p>
+  <h2>🎵 Manage Collaboration Requests</h2>
+  <p class="text-muted">Approve or reject requests from producers who want to work with you.</p>
 
-  <?php foreach($requests as $r): ?>
-    <div class="card p-3 mb-3">
-      <h5>Producer: <?= htmlspecialchars($r['producer_name']) ?></h5>
-      <p><?= nl2br(htmlspecialchars($r['message'])) ?></p>
-      <p><strong>Song:</strong> <?= $r['song_title'] ? htmlspecialchars($r['song_title']) : "No specific song" ?></p>
-      <p><strong>Status:</strong> 
+  <?php if (empty($requests)): ?>
+    <div class="alert alert-info">No collaboration requests yet.</div>
+  <?php else: ?>
+    <?php foreach ($requests as $r): ?>
+      <div class="card p-3 mb-3">
+        <h5>Producer: <?= htmlspecialchars($r['producer_name']) ?></h5>
+        <p><strong>Song:</strong> <?= $r['song_title'] ? htmlspecialchars($r['song_title']) : "No specific song" ?></p>
+        <p><strong>Message:</strong><br><?= nl2br(htmlspecialchars($r['message'])) ?></p>
+        <p><strong>Status:</strong>
+          <?php if($r['status']=='pending'): ?>
+            <span class="badge bg-warning text-dark">Pending</span>
+          <?php elseif($r['status']=='accepted'): ?>
+            <span class="badge bg-success">Accepted</span>
+          <?php else: ?>
+            <span class="badge bg-danger">Rejected</span>
+          <?php endif; ?>
+        </p>
+
         <?php if($r['status']=='pending'): ?>
-          <span class="badge bg-warning text-dark">Pending</span>
-        <?php elseif($r['status']=='accepted'): ?>
-          <span class="badge bg-success">Accepted</span>
-        <?php else: ?>
-          <span class="badge bg-danger">Rejected</span>
+          <form method="post" action="manage_action.php" class="mt-2 d-flex gap-2">
+            <input type="hidden" name="id" value="<?= $r['id'] ?>">
+            <button name="action" value="approve" class="btn btn-success btn-sm">✅ Approve</button>
+            <button name="action" value="reject" class="btn btn-danger btn-sm">❌ Reject</button>
+          </form>
         <?php endif; ?>
-      </p>
-
-      <?php if($r['status']=='pending'): ?>
-        <form method="post" class="mt-2">
-          <input type="hidden" name="id" value="<?= $r['id'] ?>">
-          <button name="action" value="approve" class="btn btn-success btn-sm">Approve</button>
-          <button name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
-        </form>
-      <?php endif; ?>
-    </div>
-  <?php endforeach; ?>
-
-  <?php if(count($requests)==0): ?>
-    <p class="text-muted text-center mt-4">No collaboration requests yet.</p>
+      </div>
+    <?php endforeach; ?>
   <?php endif; ?>
 </div>
+
+<script src="../assets/bootstrap.bundle.min.js"></script>
 </body>
 </html>

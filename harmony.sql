@@ -1,6 +1,6 @@
 -- ============================================================
--- 🎵 Harmony Music Industry System (FINAL DATABASE SCHEMA)
--- Works with XAMPP + PHP + MySQL
+-- 🎶 HARMONY MUSIC INDUSTRY SYSTEM (FINAL DATABASE SCHEMA)
+-- Compatible with XAMPP + MySQL + PHP
 -- ============================================================
 
 DROP DATABASE IF EXISTS harmony;
@@ -8,7 +8,7 @@ CREATE DATABASE harmony CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE harmony;
 
 -- ------------------------------------------------------------
--- ROLES TABLE
+-- 1️⃣ Roles Table
 -- ------------------------------------------------------------
 CREATE TABLE roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -18,7 +18,7 @@ CREATE TABLE roles (
 INSERT INTO roles (name) VALUES ('User'),('Artist'),('Producer'),('Admin');
 
 -- ------------------------------------------------------------
--- USERS TABLE
+-- 2️⃣ Users Table
 -- ------------------------------------------------------------
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -31,7 +31,7 @@ CREATE TABLE users (
 );
 
 -- ------------------------------------------------------------
--- MUSIC TABLE
+-- 3️⃣ Music Table
 -- ------------------------------------------------------------
 CREATE TABLE music (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +44,7 @@ CREATE TABLE music (
 );
 
 -- ------------------------------------------------------------
--- STREAMS (track plays by users)
+-- 4️⃣ Streams Table
 -- ------------------------------------------------------------
 CREATE TABLE streams (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,7 +56,7 @@ CREATE TABLE streams (
 );
 
 -- ------------------------------------------------------------
--- COMMENTS (with nested replies)
+-- 5️⃣ Comments Table (with Replies)
 -- ------------------------------------------------------------
 CREATE TABLE comments (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,7 +71,7 @@ CREATE TABLE comments (
 );
 
 -- ------------------------------------------------------------
--- COMMENT REACTIONS (likes/dislikes)
+-- 6️⃣ Comment Reactions (Likes/Dislikes)
 -- ------------------------------------------------------------
 CREATE TABLE comment_reactions (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,7 +85,7 @@ CREATE TABLE comment_reactions (
 );
 
 -- ------------------------------------------------------------
--- ROYALTIES
+-- 7️⃣ Royalties Table
 -- ------------------------------------------------------------
 CREATE TABLE royalties (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -101,7 +101,7 @@ CREATE TABLE royalties (
 );
 
 -- ------------------------------------------------------------
--- M-PESA TRANSACTIONS
+-- 8️⃣ Transactions (M-Pesa Payments)
 -- ------------------------------------------------------------
 CREATE TABLE transactions (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -115,7 +115,7 @@ CREATE TABLE transactions (
 );
 
 -- ------------------------------------------------------------
--- NOTIFICATIONS
+-- 9️⃣ Notifications (with Read Status)
 -- ------------------------------------------------------------
 CREATE TABLE notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -127,7 +127,7 @@ CREATE TABLE notifications (
 );
 
 -- ------------------------------------------------------------
--- PAYOUTS (withdrawal requests)
+-- 🔟 Payouts / Withdrawals
 -- ------------------------------------------------------------
 CREATE TABLE payouts (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -140,7 +140,7 @@ CREATE TABLE payouts (
 );
 
 -- ------------------------------------------------------------
--- LICENSING REQUESTS
+-- 1️⃣1️⃣ Licensing Requests
 -- ------------------------------------------------------------
 CREATE TABLE licensing_requests (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -155,7 +155,7 @@ CREATE TABLE licensing_requests (
 );
 
 -- ------------------------------------------------------------
--- PRODUCER COLLABORATION REQUESTS
+-- 1️⃣2️⃣ Producer Collaboration Requests
 -- ------------------------------------------------------------
 CREATE TABLE producer_requests (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -171,7 +171,7 @@ CREATE TABLE producer_requests (
 );
 
 -- ------------------------------------------------------------
--- ACCEPTED PRODUCER COLLABORATIONS
+-- 1️⃣3️⃣ Accepted Collaborations
 -- ------------------------------------------------------------
 CREATE TABLE producer_collabs (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -186,15 +186,22 @@ CREATE TABLE producer_collabs (
 );
 
 -- ------------------------------------------------------------
--- DEFAULT ADMIN ACCOUNT
+-- 1️⃣4️⃣ Collaboration Chat Messages
+-- ------------------------------------------------------------
+CREATE TABLE collab_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  collab_id INT NOT NULL,
+  sender_id INT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (collab_id) REFERENCES producer_collabs(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 1️⃣5️⃣ Default Admin Account
 -- ------------------------------------------------------------
 INSERT INTO users (name, email, password, role_id)
-VALUES (
-  'Admin',
-  'admin@harmony.com',
-  '$2y$10$Z5vZ2S1B4fxXQjUz4XyCOe9xNHKuRjls1eXPV5RwU8/7tkC21jM0K',
-  4
-);
+VALUES ('Admin', 'admin@harmony.com',
+'$2y$10$Z5vZ2S1B4fxXQjUz4XyCOe9xNHKuRjls1eXPV5RwU8/7tkC21jM0K', 4);
 -- Password: admin123
-
--- ✅ End of Harmony Database Schema
