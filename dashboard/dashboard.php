@@ -1,53 +1,91 @@
-<?php 
-require_once "../config/bootstrap.php"; 
-require_login(); 
+<?php
+require "../config/bootstrap.php";
+require_login();
 $user = current_user();
-?>
 
-<?php include "../includes/header.php"; ?>
+// Fetch role name
+$stmt = $pdo->prepare("SELECT name FROM roles WHERE id = ?");
+$stmt->execute([$user['role_id']]);
+$role_name = $stmt->fetchColumn();
+
+// Fetch latest songs
+$songs = $pdo->prepare("SELECT title, genre, views, created_at FROM music WHERE artist_id = ? ORDER BY created_at DESC LIMIT 5");
+$songs->execute([$user['id']]);
+$music_list = $songs->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch latest notifications
+$notes = $pdo->prepare("SELECT message, created_at, is_read FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 5");
+$notes->execute([$user['id']]);
+$notifications = $notes->fetchAll(PDO::FETCH_ASSOC);
+?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dashboard - Harmony</title>
+  <link href="../assets/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/style.css" rel="stylesheet">
+</head>
+<body>
 <?php include "../includes/navbar.php"; ?>
 
 <div class="container mt-5">
-  <h1 class="mb-4">Welcome, <?= htmlspecialchars($user['name']) ?> 🎶</h1>
-  <p class="lead">Welcome to the Dashboard</p>
+  <h2 class="text-primary mb-3">🎶 Welcome, <?= htmlspecialchars($user['name']) ?></h2>
+  <p class="text-muted">Role: <strong><?= htmlspecialchars($role_name) ?></strong></p>
 
-  <!-- Example Artist Stats -->
-  <?php if ($user['role'] === 'Artist'): ?>
-  <div class="row text-center">
-    <div class="col-md-3">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">Songs Uploaded</h5>
-          <p class="display-6 text-primary">24</p>
-        </div>
+  <div class="row g-4">
+    <!-- Notifications -->
+    <div class="col-md-6">
+      <div class="card p-3 shadow-sm">
+        <h5>🔔 Recent Notifications</h5>
+        <?php if(empty($notifications)): ?>
+          <p class="text-muted">No notifications yet.</p>
+        <?php else: ?>
+          <ul class="list-group list-group-flush">
+            <?php foreach($notifications as $n): ?>
+              <li class="list-group-item d-flex justify-content-between">
+                <span><?= htmlspecialchars($n['message']) ?></span>
+                <small class="text-muted"><?= date('M d, H:i', strtotime($n['created_at'])) ?></small>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+          <div class="mt-2 text-end">
+            <a href="/harmony/notifications/list.php" class="btn btn-sm btn-outline-primary">View all</a>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">Total Streams</h5>
-          <p class="display-6 text-success">4,520</p>
+
+    <!-- Music -->
+    <div class="col-md-6">
+      <div class="card p-3 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5>🎧 Your Latest Songs</h5>
+          <a href="/harmony/music/upload.php" class="btn btn-sm btn-primary">+ Upload</a>
         </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">Royalties</h5>
-          <p class="display-6 text-warning">KES 8,300</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">Collabs</h5>
-          <p class="display-6 text-info">4</p>
-        </div>
+        <?php if(empty($music_list)): ?>
+          <p class="text-muted">No music uploaded yet.</p>
+        <?php else: ?>
+          <table class="table table-sm mt-2">
+            <thead><tr><th>Title</th><th>Genre</th><th>Views</th><th>Date</th></tr></thead>
+            <tbody>
+              <?php foreach($music_list as $m): ?>
+                <tr>
+                  <td><?= htmlspecialchars($m['title']) ?></td>
+                  <td><?= htmlspecialchars($m['genre'] ?: '-') ?></td>
+                  <td><?= (int)$m['views'] ?></td>
+                  <td><?= date('M d', strtotime($m['created_at'])) ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+          <div class="text-end">
+            <a href="/harmony/music/list.php" class="btn btn-sm btn-outline-success">View Library</a>
+          </div>
+        <?php endif; ?>
       </div>
     </div>
   </div>
-  <?php endif; ?>
 </div>
-
-<?php include "../includes/footer.php"; ?>
+</body>
+</html>
