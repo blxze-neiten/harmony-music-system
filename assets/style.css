@@ -1,6 +1,7 @@
 /* ============================================================
    🎵 HARMONY MUSIC INDUSTRY SYSTEM – MODERN STYLE SHEET
    Modern design with gradients, animations, and smooth UI
+   Cross-browser safe version
    ============================================================ */
 
 * {
@@ -9,6 +10,9 @@
   box-sizing: border-box;
 }
 
+/* ----------------------------
+   Base Styles
+----------------------------- */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -26,8 +30,9 @@ h1, h2, h3, h4, h5 {
    Navbar
 ----------------------------- */
 .navbar {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255,255,255,0.95);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   position: fixed;
   top: 0;
@@ -165,14 +170,8 @@ h1, h2, h3, h4, h5 {
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .alert-success {
@@ -297,7 +296,7 @@ h1, h2, h3, h4, h5 {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px) scale(1); }
+  0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(30px) scale(1.05); }
 }
 
@@ -378,53 +377,6 @@ canvas {
   max-width: 100%;
   max-height: 400px;
   border-radius: 10px;
-}
-
-/* ----------------------------
-   Animations
------------------------------ */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ----------------------------
-   Utility Classes
------------------------------ */
-.gradient-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.shadow-lg {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
-}
-
-.rounded-lg {
-  border-radius: 20px !important;
 }
 
 /* ----------------------------
@@ -578,6 +530,41 @@ canvas {
   gap: 10px;
   justify-content: flex-end;
   margin-top: 15px;
+}
+
+/* ----------------------------
+   Animations
+----------------------------- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ----------------------------
+   Utility Classes
+----------------------------- */
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+.rounded-lg {
+  border-radius: 20px !important;
 }
 
 /* ----------------------------
