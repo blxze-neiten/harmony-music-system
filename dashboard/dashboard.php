@@ -8,8 +8,25 @@ $stmt = $pdo->prepare("SELECT name FROM roles WHERE id = ?");
 $stmt->execute([$user['role_id']]);
 $role_name = $stmt->fetchColumn();
 
+// Fetch statistics
+$totalSongs = $pdo->prepare("SELECT COUNT(*) FROM music WHERE artist_id = ?");
+$totalSongs->execute([$user['id']]);
+$songCount = $totalSongs->fetchColumn();
+
+$totalViews = $pdo->prepare("SELECT SUM(views) FROM music WHERE artist_id = ?");
+$totalViews->execute([$user['id']]);
+$viewCount = $totalViews->fetchColumn() ?: 0;
+
+$totalStreams = $pdo->prepare("SELECT COUNT(*) FROM streams s JOIN music m ON s.music_id = m.id WHERE m.artist_id = ?");
+$totalStreams->execute([$user['id']]);
+$streamCount = $totalStreams->fetchColumn();
+
+$unreadCount = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
+$unreadCount->execute([$user['id']]);
+$unreadNotifications = $unreadCount->fetchColumn();
+
 // Fetch latest songs
-$songs = $pdo->prepare("SELECT title, genre, views, created_at FROM music WHERE artist_id = ? ORDER BY created_at DESC LIMIT 5");
+$songs = $pdo->prepare("SELECT id, title, genre, views, created_at FROM music WHERE artist_id = ? ORDER BY created_at DESC LIMIT 5");
 $songs->execute([$user['id']]);
 $music_list = $songs->fetchAll(PDO::FETCH_ASSOC);
 
@@ -22,6 +39,7 @@ $notifications = $notes->fetchAll(PDO::FETCH_ASSOC);
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Harmony</title>
   <link href="../assets/bootstrap.min.css" rel="stylesheet">
   <link href="../assets/style.css" rel="stylesheet">
@@ -29,63 +47,121 @@ $notifications = $notes->fetchAll(PDO::FETCH_ASSOC);
 <body>
 <?php include "../includes/navbar.php"; ?>
 
-<div class="container mt-5">
-  <h2 class="text-primary mb-3">🎶 Welcome, <?= htmlspecialchars($user['name']) ?></h2>
-  <p class="text-muted">Role: <strong><?= htmlspecialchars($role_name) ?></strong></p>
+<div class="container">
+  <div class="dashboard-header">
+    <h2>🎶 Welcome back, <?= htmlspecialchars($user['name']) ?>!</h2>
+    <span class="role-badge"><?= htmlspecialchars($role_name) ?></span>
+  </div>
+
+  <!-- STATISTICS GRID -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">🎵</div>
+      <div class="stat-label">Total Songs</div>
+      <div class="stat-value"><?= number_format($songCount) ?></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">👁️</div>
+      <div class="stat-label">Total Views</div>
+      <div class="stat-value"><?= number_format($viewCount) ?></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">▶️</div>
+      <div class="stat-label">Total Streams</div>
+      <div class="stat-value"><?= number_format($streamCount) ?></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔔</div>
+      <div class="stat-label">Notifications</div>
+      <div class="stat-value"><?= number_format($unreadNotifications) ?></div>
+    </div>
+  </div>
 
   <div class="row g-4">
     <!-- Notifications -->
-    <div class="col-md-6">
-      <div class="card p-3 shadow-sm">
+    <div class="col-lg-6">
+      <div class="content-card">
         <h5>🔔 Recent Notifications</h5>
         <?php if(empty($notifications)): ?>
-          <p class="text-muted">No notifications yet.</p>
+          <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <p>No notifications yet.</p>
+          </div>
         <?php else: ?>
-          <ul class="list-group list-group-flush">
-            <?php foreach($notifications as $n): ?>
-              <li class="list-group-item d-flex justify-content-between">
-                <span><?= htmlspecialchars($n['message']) ?></span>
-                <small class="text-muted"><?= date('M d, H:i', strtotime($n['created_at'])) ?></small>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-          <div class="mt-2 text-end">
-            <a href="/harmony/notifications/list.php" class="btn btn-sm btn-outline-primary">View all</a>
+          <?php foreach($notifications as $n): ?>
+            <div class="notification-item <?= !$n['is_read'] ? 'unread' : '' ?>">
+              <div class="notification-message"><?= htmlspecialchars($n['message']) ?></div>
+              <div class="notification-time"><?= date('M d, Y • g:i A', strtotime($n['created_at'])) ?></div>
+            </div>
+          <?php endforeach; ?>
+          <div class="btn-action-group">
+            <a href="/harmony/notifications/list.php" class="btn btn-sm btn-primary">View All Notifications</a>
           </div>
         <?php endif; ?>
       </div>
     </div>
 
-    <!-- Music -->
-    <div class="col-md-6">
-      <div class="card p-3 shadow-sm">
-        <div class="d-flex justify-content-between align-items-center">
-          <h5>🎧 Your Latest Songs</h5>
-          <a href="/harmony/music/upload.php" class="btn btn-sm btn-primary">+ Upload</a>
+    <!-- Reports -->
+    <div class="col-lg-6">
+      <div class="content-card">
+        <h5>📊 Reports & Analytics</h5>
+        <div class="chart-container text-center">
+          <canvas id="reportChart"></canvas>
         </div>
-        <?php if(empty($music_list)): ?>
-          <p class="text-muted">No music uploaded yet.</p>
-        <?php else: ?>
-          <table class="table table-sm mt-2">
-            <thead><tr><th>Title</th><th>Genre</th><th>Views</th><th>Date</th></tr></thead>
-            <tbody>
-              <?php foreach($music_list as $m): ?>
-                <tr>
-                  <td><?= htmlspecialchars($m['title']) ?></td>
-                  <td><?= htmlspecialchars($m['genre'] ?: '-') ?></td>
-                  <td><?= (int)$m['views'] ?></td>
-                  <td><?= date('M d', strtotime($m['created_at'])) ?></td>
-                </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-          <div class="text-end">
-            <a href="/harmony/music/list.php" class="btn btn-sm btn-outline-success">View Library</a>
-          </div>
-        <?php endif; ?>
+        <div class="btn-action-group">
+          <a href="/harmony/reports/view.php" class="btn btn-sm btn-success">View Full Reports</a>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Music Table (Library Shortcut) -->
+  <div class="content-card mt-4">
+    <h5>🎧 Latest Songs Uploaded</h5>
+    <?php if(empty($music_list)): ?>
+      <div class="empty-state">
+        <div class="empty-state-icon">🎼</div>
+        <p>No music uploaded yet.</p>
+      </div>
+    <?php else: ?>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Genre</th>
+            <th>Views</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach($music_list as $m): ?>
+            <tr onclick="window.location='/harmony/music/list.php';" style="cursor:pointer;">
+              <td><strong><?= htmlspecialchars($m['title']) ?></strong></td>
+              <td><?= htmlspecialchars($m['genre'] ?: '-') ?></td>
+              <td><?= number_format((int)$m['views']) ?></td>
+              <td><?= date('M d', strtotime($m['created_at'])) ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    <?php endif; ?>
+  </div>
 </div>
+
+<script src="../assets/bootstrap.bundle.min.js"></script>
+<script src="../assets/chart.min.js"></script>
+<script>
+new Chart(document.getElementById('reportChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Songs', 'Views', 'Streams', 'Notifications'],
+    datasets: [{
+      label: 'Artist Stats',
+      data: [<?= $songCount ?>, <?= $viewCount ?>, <?= $streamCount ?>, <?= $unreadNotifications ?>],
+      backgroundColor: ['#667eea', '#764ba2', '#28a745', '#ffc107']
+    }]
+  }
+});
+</script>
 </body>
 </html>
