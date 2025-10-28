@@ -1,12 +1,14 @@
 <?php
 require __DIR__ . '/../config/bootstrap.php';
 if (isset($_SESSION['user'])) {
-    header("Location: /harmony/dashboard/dashboard.php"); exit;
+    header("Location: /harmony/dashboard/dashboard.php");
+    exit;
 }
 
 $msg = null;
 $msgType = 'danger';
-if ($_SERVER['REQUEST_METHOD']==='POST') {
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -17,17 +19,26 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     } else {
         $hash = password_hash($password, PASSWORD_BCRYPT);
         try {
-            $stmt = $pdo->prepare("INSERT INTO users (name,email,password,role_id) VALUES (?,?,?,?)");
-            $stmt->execute([$name,$email,$hash,$role_id]);
-            $msg = "✅ Registration successful. Please login.";
-            $msgType = 'success';
+            // ✅ Prevent manual admin registration
+            $isAdmin = $pdo->prepare("SELECT name FROM roles WHERE id = ?");
+            $isAdmin->execute([$role_id]);
+            $roleName = $isAdmin->fetchColumn();
+            if (strtolower($roleName) === 'admin') {
+                $msg = "❌ You cannot register as an Admin.";
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO users (name,email,password,role_id) VALUES (?,?,?,?)");
+                $stmt->execute([$name, $email, $hash, $role_id]);
+                $msg = "✅ Registration successful. Please login.";
+                $msgType = 'success';
+            }
         } catch (Exception $e) {
             $msg = "❌ Email already registered.";
         }
     }
 }
 
-$roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
+// ✅ Fetch all roles except Admin
+$roles = $pdo->query("SELECT id,name FROM roles WHERE name != 'Admin'")->fetchAll();
 ?>
 <!doctype html>
 <html lang="en">
@@ -37,11 +48,7 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
   <title>Register - Harmony</title>
   <link rel="stylesheet" href="/harmony/assets/bootstrap.min.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -55,32 +62,32 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
       padding: 20px;
     }
 
-    body::before {
+    body::before, body::after {
       content: '';
       position: absolute;
-      width: 500px;
-      height: 500px;
-      background: rgba(255, 255, 255, 0.1);
       border-radius: 50%;
-      top: -250px;
-      right: -250px;
       animation: float 6s ease-in-out infinite;
     }
 
+    body::before {
+      width: 500px;
+      height: 500px;
+      background: rgba(255, 255, 255, 0.1);
+      top: -250px;
+      right: -250px;
+    }
+
     body::after {
-      content: '';
-      position: absolute;
       width: 400px;
       height: 400px;
       background: rgba(255, 255, 255, 0.08);
-      border-radius: 50%;
       bottom: -200px;
       left: -200px;
-      animation: float 8s ease-in-out infinite reverse;
+      animation-direction: reverse;
     }
 
     @keyframes float {
-      0%, 100% { transform: translateY(0px); }
+      0%, 100% { transform: translateY(0); }
       50% { transform: translateY(30px); }
     }
 
@@ -98,35 +105,20 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
     }
 
     @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .logo {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
+    .logo { text-align: center; margin-bottom: 30px; }
     .logo h1 {
       font-size: 32px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
       font-weight: 700;
       margin-bottom: 5px;
     }
-
-    .logo p {
-      color: #666;
-      font-size: 14px;
-    }
+    .logo p { color: #666; font-size: 14px; }
 
     .alert {
       padding: 12px 16px;
@@ -135,18 +127,8 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
       font-size: 14px;
       animation: shake 0.4s;
     }
-
-    .alert-danger {
-      background: #fee;
-      color: #c33;
-      border: 1px solid #fcc;
-    }
-
-    .alert-success {
-      background: #efe;
-      color: #2a7;
-      border: 1px solid #cfc;
-    }
+    .alert-danger { background: #fee; color: #c33; border: 1px solid #fcc; }
+    .alert-success { background: #efe; color: #2a7; border: 1px solid #cfc; }
 
     @keyframes shake {
       0%, 100% { transform: translateX(0); }
@@ -154,21 +136,9 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
       75% { transform: translateX(10px); }
     }
 
-    .form-group {
-      margin-bottom: 20px;
-      position: relative;
-    }
+    .form-group { margin-bottom: 20px; position: relative; }
 
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #333;
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    input.form-control,
-    select.form-select {
+    input.form-control, select.form-select {
       width: 100%;
       padding: 14px 16px;
       border: 2px solid #e0e0e0;
@@ -177,25 +147,10 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
       transition: all 0.3s ease;
       background: #fff;
     }
-
-    input.form-control:focus,
-    select.form-select:focus {
-      outline: none;
+    input.form-control:focus, select.form-select:focus {
       border-color: #667eea;
       box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-    }
-
-    input.form-control::placeholder {
-      color: #aaa;
-    }
-
-    select.form-select {
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 16px center;
-      padding-right: 45px;
+      outline: none;
     }
 
     .btn-primary {
@@ -212,34 +167,14 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
       margin-top: 10px;
     }
-
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
 
-    .btn-primary:active {
-      transform: translateY(0);
-    }
-
-    .login-link {
-      text-align: center;
-      margin-top: 25px;
-      color: #666;
-      font-size: 14px;
-    }
-
-    .login-link a {
-      color: #667eea;
-      text-decoration: none;
-      font-weight: 600;
-      transition: color 0.3s;
-    }
-
-    .login-link a:hover {
-      color: #764ba2;
-    }
+    .login-link { text-align: center; margin-top: 25px; color: #666; font-size: 14px; }
+    .login-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+    .login-link a:hover { color: #764ba2; }
   </style>
 </head>
 <body>
@@ -249,8 +184,8 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
       <p>Create your account</p>
     </div>
 
-    <?php if($msg): ?>
-      <div class="alert alert-<?= $msgType ?>"><?= e($msg) ?></div>
+    <?php if ($msg): ?>
+      <div class="alert alert-<?= $msgType ?>"><?= htmlspecialchars($msg) ?></div>
     <?php endif; ?>
 
     <form method="post">
@@ -265,8 +200,9 @@ $roles = $pdo->query("SELECT id,name FROM roles")->fetchAll();
       </div>
       <div class="form-group">
         <select name="role_id" class="form-select" required>
-          <?php foreach($roles as $r): ?>
-            <option value="<?= $r['id'] ?>"><?= e($r['name']) ?></option>
+          <option value="">-- Select Role --</option>
+          <?php foreach ($roles as $r): ?>
+            <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['name']) ?></option>
           <?php endforeach; ?>
         </select>
       </div>

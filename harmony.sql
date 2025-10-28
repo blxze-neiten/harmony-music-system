@@ -1,7 +1,8 @@
 -- ============================================================
--- 🎶 HARMONY MUSIC INDUSTRY SYSTEM – FINAL DATABASE SCHEMA
--- Includes: charts, reports, notifications, and admin analytics
--- Compatible with XAMPP (MySQL + PHP 8)
+-- 🎵 HARMONY MUSIC INDUSTRY SYSTEM – FINAL DATABASE SCHEMA
+-- Includes analytics, royalties, payouts, collaborations, licensing,
+-- notifications, streams, likes/dislikes, comments, approvals, and admin.
+-- Compatible with XAMPP (PHP 8 + MySQL 8)
 -- ============================================================
 
 DROP DATABASE IF EXISTS harmony;
@@ -15,8 +16,9 @@ CREATE TABLE roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) UNIQUE
 );
+
 INSERT INTO roles (name)
-VALUES ('User'),('Artist'),('Producer'),('Admin');
+VALUES ('User'), ('Artist'), ('Producer'), ('Admin');
 
 -- ------------------------------------------------------------
 -- 2️⃣ Users
@@ -47,12 +49,44 @@ CREATE TABLE music (
   genre VARCHAR(100),
   file_path VARCHAR(255) NOT NULL,
   views INT DEFAULT 0,
+  likes INT DEFAULT 0,
+  status VARCHAR(20) DEFAULT 'pending',
+  featured TINYINT(1) DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (artist_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- ------------------------------------------------------------
--- 4️⃣ Streams
+-- 4️⃣ Likes & Dislikes
+-- ------------------------------------------------------------
+CREATE TABLE likes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  music_id INT NOT NULL,
+  reaction ENUM('like','dislike') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_reaction (user_id, music_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (music_id) REFERENCES music(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 5️⃣ Comments
+-- ------------------------------------------------------------
+CREATE TABLE comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  music_id INT NOT NULL,
+  user_id INT NOT NULL,
+  comment TEXT NOT NULL,
+  parent_id INT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (music_id) REFERENCES music(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+);
+
+-- ------------------------------------------------------------
+-- 6️⃣ Streams (Tracks number of plays)
 -- ------------------------------------------------------------
 CREATE TABLE streams (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -64,20 +98,7 @@ CREATE TABLE streams (
 );
 
 -- ------------------------------------------------------------
--- 5️⃣ Comments
--- ------------------------------------------------------------
-CREATE TABLE comments (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  music_id INT NOT NULL,
-  user_id INT NOT NULL,
-  comment TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (music_id) REFERENCES music(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- ------------------------------------------------------------
--- 6️⃣ Royalties
+-- 7️⃣ Royalties
 -- ------------------------------------------------------------
 CREATE TABLE royalties (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -92,7 +113,7 @@ CREATE TABLE royalties (
 );
 
 -- ------------------------------------------------------------
--- 7️⃣ Transactions (M-Pesa)
+-- 8️⃣ Transactions (M-Pesa)
 -- ------------------------------------------------------------
 CREATE TABLE transactions (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -106,7 +127,7 @@ CREATE TABLE transactions (
 );
 
 -- ------------------------------------------------------------
--- 8️⃣ Notifications
+-- 9️⃣ Notifications & History
 -- ------------------------------------------------------------
 CREATE TABLE notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -129,7 +150,7 @@ CREATE TABLE notification_history (
 );
 
 -- ------------------------------------------------------------
--- 9️⃣ Payouts
+-- 🔟 Payouts (Royalty Withdrawals)
 -- ------------------------------------------------------------
 CREATE TABLE payouts (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -142,7 +163,7 @@ CREATE TABLE payouts (
 );
 
 -- ------------------------------------------------------------
--- 🔟 Licensing
+-- 1️⃣1️⃣ Licensing Requests
 -- ------------------------------------------------------------
 CREATE TABLE licensing_requests (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -157,7 +178,7 @@ CREATE TABLE licensing_requests (
 );
 
 -- ------------------------------------------------------------
--- 1️⃣1️⃣ Producer Collaborations
+-- 1️⃣2️⃣ Producer Collaborations (with chat + status tracking)
 -- ------------------------------------------------------------
 CREATE TABLE producer_collabs (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -165,12 +186,14 @@ CREATE TABLE producer_collabs (
   artist_id INT NOT NULL,
   producer_id INT NOT NULL,
   revenue_share DECIMAL(5,2) DEFAULT 30.00,
+  status ENUM('pending','accepted','rejected') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (music_id) REFERENCES music(id) ON DELETE CASCADE,
   FOREIGN KEY (artist_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (producer_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- 💬 Collaboration chat messages between artist & producer
 CREATE TABLE collab_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   collab_id INT NOT NULL,
@@ -181,10 +204,4 @@ CREATE TABLE collab_messages (
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- ------------------------------------------------------------
--- 1️⃣2️⃣ Default Admin
--- ------------------------------------------------------------
-INSERT INTO users (name, email, password, role_id)
-VALUES ('Admin', 'admin@harmony.com',
-'$2y$10$Z5vZ2S1B4fxXQjUz4XyCOe9xNHKuRjls1eXPV5RwU8/7tkC21jM0K', 4);
--- Password: admin123
+-- ✅ END OF FINAL DATABASE SCHEMA
