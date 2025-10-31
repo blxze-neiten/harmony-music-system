@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $allowed_ext = ['mp3', 'wav', 'ogg', 'm4a'];
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        
+
         if (!in_array($ext, $allowed_ext)) {
             $error = "Only MP3, WAV, OGG, and M4A files are allowed.";
         } else {
@@ -181,16 +181,86 @@ input:focus, select:focus {
 
   <form method="POST" enctype="multipart/form-data">
     <input type="text" name="title" placeholder="Enter Song Title" required>
-    
+
+    <!-- ✅ All Global Genres -->
     <select name="genre" required>
       <option value="">-- Select Genre --</option>
-      <option value="Afrobeat">Afrobeat</option>
-      <option value="Hip Hop">Hip Hop</option>
-      <option value="Pop">Pop</option>
-      <option value="R&B">R&B</option>
-      <option value="Gospel">Gospel</option>
-      <option value="Reggae">Reggae</option>
-      <option value="Other">Other</option>
+
+      <!-- 🎵 Popular Genres -->
+      <optgroup label="Popular Genres">
+        <option value="Pop">Pop</option>
+        <option value="Hip Hop">Hip Hop</option>
+        <option value="R&B">R&B</option>
+        <option value="Afrobeats">Afrobeats</option>
+        <option value="Dancehall">Dancehall</option>
+        <option value="Reggae">Reggae</option>
+        <option value="Gospel">Gospel</option>
+        <option value="Soul">Soul</option>
+        <option value="K-Pop">K-Pop</option>
+        <option value="Amapiano">Amapiano</option>
+        <option value="Trap">Trap</option>
+      </optgroup>
+
+      <!-- 🎸 Rock & Alternative -->
+      <optgroup label="Rock & Alternative">
+        <option value="Rock">Rock</option>
+        <option value="Alternative Rock">Alternative Rock</option>
+        <option value="Indie Rock">Indie Rock</option>
+        <option value="Punk">Punk</option>
+        <option value="Metal">Metal</option>
+        <option value="Grunge">Grunge</option>
+      </optgroup>
+
+      <!-- 🎹 Electronic & Dance -->
+      <optgroup label="Electronic & Dance">
+        <option value="EDM">EDM</option>
+        <option value="House">House</option>
+        <option value="Techno">Techno</option>
+        <option value="Trance">Trance</option>
+        <option value="Drum and Bass">Drum and Bass</option>
+        <option value="Dubstep">Dubstep</option>
+        <option value="Electro Pop">Electro Pop</option>
+      </optgroup>
+
+      <!-- 🎻 Classical & Jazz -->
+      <optgroup label="Classical & Jazz">
+        <option value="Classical">Classical</option>
+        <option value="Jazz">Jazz</option>
+        <option value="Blues">Blues</option>
+        <option value="Opera">Opera</option>
+        <option value="Orchestral">Orchestral</option>
+        <option value="Swing">Swing</option>
+      </optgroup>
+
+      <!-- 🎤 Cultural & World Music -->
+      <optgroup label="World & Cultural">
+        <option value="Bongo Flava">Bongo Flava</option>
+        <option value="Gengetone">Gengetone</option>
+        <option value="Benga">Benga</option>
+        <option value="Highlife">Highlife</option>
+        <option value="Soukous">Soukous</option>
+        <option value="Zouk">Zouk</option>
+        <option value="Latin">Latin</option>
+        <option value="Reggaeton">Reggaeton</option>
+        <option value="Salsa">Salsa</option>
+        <option value="Merengue">Merengue</option>
+        <option value="Soca">Soca</option>
+        <option value="Taarab">Taarab</option>
+        <option value="Arabic">Arabic</option>
+        <option value="Indian Pop">Indian Pop</option>
+        <option value="Bhangra">Bhangra</option>
+      </optgroup>
+
+      <!-- 🎧 Other Categories -->
+      <optgroup label="Other">
+        <option value="Instrumental">Instrumental</option>
+        <option value="Lo-Fi">Lo-Fi</option>
+        <option value="Soundtrack">Soundtrack</option>
+        <option value="Podcast">Podcast</option>
+        <option value="Spoken Word">Spoken Word</option>
+        <option value="Experimental">Experimental</option>
+        <option value="Other">Other</option>
+      </optgroup>
     </select>
 
     <input type="file" name="file" accept=".mp3,.wav,.ogg,.m4a" required>

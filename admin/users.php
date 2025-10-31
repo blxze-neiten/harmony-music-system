@@ -3,7 +3,24 @@ require __DIR__ . '/../config/bootstrap.php';
 require_roles(['Admin']);
 $user = current_user();
 
-// filtering/search
+// ---------- Handle deletion (safe: cannot delete yourself) ----------
+$msg = $error = '';
+if (isset($_GET['delete'])) {
+    $delete_id = (int) $_GET['delete'];
+    if ($delete_id === $user['id']) {
+        $error = "You cannot delete your own admin account.";
+    } else {
+        $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->execute([$delete_id]);
+        if ($stmt->rowCount()) {
+            $msg = "User deleted successfully.";
+        } else {
+            $error = "Failed to delete user (user may not exist).";
+        }
+    }
+}
+
+// ---------- Filtering / Search ----------
 $search = trim($_GET['search'] ?? '');
 $role = $_GET['role'] ?? 'all';
 
@@ -20,6 +37,7 @@ if ($role !== 'all') {
 $query .= " ORDER BY u.created_at DESC";
 $stmt = $pdo->prepare($query); $stmt->execute($params);
 $users = $stmt->fetchAll();
+
 $roles = $pdo->query("SELECT name FROM roles")->fetchAll(PDO::FETCH_COLUMN);
 
 // Calculate stats
@@ -308,6 +326,25 @@ foreach($roles as $r) {
     font-size: 0.9rem;
   }
 
+  /* small action button matching the decoration */
+  .action-delete {
+    display:inline-block;
+    background: linear-gradient(135deg,#ff8585,#ff6b6b);
+    color:white;
+    padding:8px 12px;
+    border-radius:10px;
+    font-weight:600;
+    text-decoration:none;
+  }
+  .action-disabled {
+    display:inline-block;
+    background:#d9d9d9;
+    color:#666;
+    padding:8px 12px;
+    border-radius:10px;
+    font-weight:600;
+  }
+
   .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -349,6 +386,17 @@ foreach($roles as $r) {
       <?= $totalUsers ?> <?= $totalUsers === 1 ? 'user' : 'users' ?> found
     </div>
   </div>
+
+  <!-- show message (keeps your style intact) -->
+  <?php if ($msg): ?>
+    <div style="margin-bottom:20px; padding:12px 18px; background:#e8fff0; border-radius:10px; color:#18794e;">
+      <?= htmlspecialchars($msg) ?>
+    </div>
+  <?php elseif ($error): ?>
+    <div style="margin-bottom:20px; padding:12px 18px; background:#fff2f2; border-radius:10px; color:#842029;">
+      <?= htmlspecialchars($error) ?>
+    </div>
+  <?php endif; ?>
 
   <div class="stats-grid">
     <?php foreach($roleStats as $roleName => $count): ?>
@@ -396,6 +444,7 @@ foreach($roles as $r) {
             <th>Email</th>
             <th>Role</th>
             <th>Joined</th>
+            <th>Action</th> <!-- ADDED column -->
           </tr>
         </thead>
         <tbody>
@@ -410,6 +459,17 @@ foreach($roles as $r) {
                 </span>
               </td>
               <td><span class="date-text"><?= date('M d, Y', strtotime($u['created_at'])) ?></span></td>
+
+              <!-- ---------- Action Column (Delete) ---------- -->
+              <td>
+                <?php if ($u['id'] !== $user['id']): ?>
+                  <a href="?delete=<?= $u['id'] ?>"
+                     onclick="return confirm('Are you sure you want to delete this user? This cannot be undone.')"
+                     class="action-delete">🗑️ Delete</a>
+                <?php else: ?>
+                  <span class="action-disabled">Admin</span>
+                <?php endif; ?>
+              </td>
             </tr>
           <?php endforeach; ?>
         </tbody>

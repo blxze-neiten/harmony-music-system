@@ -17,28 +17,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$name || !$email || !$password) {
         $msg = "Please fill all fields.";
     } else {
-        $hash = password_hash($password, PASSWORD_BCRYPT);
         try {
-            // ✅ Prevent manual admin registration
-            $isAdmin = $pdo->prepare("SELECT name FROM roles WHERE id = ?");
-            $isAdmin->execute([$role_id]);
-            $roleName = $isAdmin->fetchColumn();
+            // ✅ Verify role is not Admin (extra security)
+            $checkRole = $pdo->prepare("SELECT name FROM roles WHERE id = ?");
+            $checkRole->execute([$role_id]);
+            $roleName = $checkRole->fetchColumn();
+
             if (strtolower($roleName) === 'admin') {
                 $msg = "❌ You cannot register as an Admin.";
             } else {
+                $hash = password_hash($password, PASSWORD_BCRYPT);
                 $stmt = $pdo->prepare("INSERT INTO users (name,email,password,role_id) VALUES (?,?,?,?)");
                 $stmt->execute([$name, $email, $hash, $role_id]);
                 $msg = "✅ Registration successful. Please login.";
                 $msgType = 'success';
             }
         } catch (Exception $e) {
-            $msg = "❌ Email already registered.";
+            $msg = "❌ Email already registered or an error occurred.";
         }
     }
 }
 
 // ✅ Fetch all roles except Admin
-$roles = $pdo->query("SELECT id,name FROM roles WHERE name != 'Admin'")->fetchAll();
+$roles = $pdo->query("SELECT id, name FROM roles WHERE LOWER(name) != 'admin'")->fetchAll();
 ?>
 <!doctype html>
 <html lang="en">
@@ -202,7 +203,7 @@ $roles = $pdo->query("SELECT id,name FROM roles WHERE name != 'Admin'")->fetchAl
         <select name="role_id" class="form-select" required>
           <option value="">-- Select Role --</option>
           <?php foreach ($roles as $r): ?>
-            <option value="<?= $r['id'] ?>"><?= htmlspecialchars($r['name']) ?></option>
+            <option value="<?= (int)$r['id'] ?>"><?= htmlspecialchars($r['name']) ?></option>
           <?php endforeach; ?>
         </select>
       </div>
