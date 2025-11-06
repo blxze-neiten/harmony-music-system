@@ -182,9 +182,11 @@ a.back:hover { text-decoration: underline; }
   <h2><?= htmlspecialchars($song['title']) ?></h2>
   <p>By <strong><?= htmlspecialchars($song['artist_name']) ?></strong> • <?= htmlspecialchars($song['genre']) ?></p>
 
-  <audio controls>
-    <source src="/harmony/music/<?= htmlspecialchars($song['file_path']) ?>" type="audio/mpeg">
-  </audio>
+  <audio controls style="width:100%; margin-top:10px;">
+    <source src="<?= htmlspecialchars($song['file_path']) ?>" type="audio/mpeg">
+    Your browser does not support audio playback.
+</audio>
+
 
   <form method="post" class="mt-3 d-flex gap-2">
     <button type="submit" name="reaction" value="like" class="reaction-btn like">

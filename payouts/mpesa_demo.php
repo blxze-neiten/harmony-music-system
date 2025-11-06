@@ -117,7 +117,7 @@ $transactions = $tx->fetchAll();
         <input type="number" name="amount" class="form-control" min="1" step="0.01" required>
       </div>
       <div class="col-12 text-center mt-3">
-        <button class="btn btn-success btn-lg">💸 Simulate Payment</button>
+        <button class="btn btn-success btn-lg">💸 Make your Payment</button>
       </div>
     </form>
   </div>

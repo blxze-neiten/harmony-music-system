@@ -1,40 +1,46 @@
 <?php
 require "../config/bootstrap.php";
 
-// Cron simulation — normally this would run daily/weekly
-$rate_per_stream = 0.50; // 50 cents per stream
-$today = date('Y-m-d');
+$rate_per_stream = 0.50; // KES per play
 
-// Get all songs and count streams
+// Get all songs and total stream counts
 $songs = $pdo->query("
-  SELECT m.id, COUNT(s.id) AS streams
+  SELECT 
+      m.id,
+      COUNT(s.id) AS total_streams
   FROM music m
   LEFT JOIN streams s ON m.id = s.music_id
   GROUP BY m.id
-")->fetchAll();
+")->fetchAll(PDO::FETCH_ASSOC);
 
 foreach ($songs as $song) {
-  $music_id = $song['id'];
-  $streams = $song['streams'];
-  $gross = $streams * $rate_per_stream;
+    $music_id = $song['id'];
+    $streams = $song['total_streams'];
+    $gross = $streams * $rate_per_stream;
 
-  // Check if royalty exists
-  $stmt = $pdo->prepare("SELECT id FROM royalties WHERE music_id = ?");
-  $stmt->execute([$music_id]);
-  $exists = $stmt->fetch();
+    $artist_share = $gross * 0.7;
+    $producer_share = $gross * 0.3;
 
-  if ($exists) {
-    // Update existing royalty record
-    $pdo->prepare("UPDATE royalties SET streams_count=?, gross_amount=?, artist_share=? WHERE music_id=?")
-        ->execute([$streams, $gross, $gross, $music_id]);
-  } else {
-    // Insert new record
-    $pdo->prepare("
-      INSERT INTO royalties (music_id, period_start, period_end, streams_count, gross_amount, artist_share)
-      VALUES (?, ?, ?, ?, ?, ?)
-    ")->execute([$music_id, $today, $today, $streams, $gross, $gross]);
-  }
+    // Check if royalty record exists
+    $stmt = $pdo->prepare("SELECT id FROM royalties WHERE music_id = ?");
+    $stmt->execute([$music_id]);
+    $exists = $stmt->fetch();
+
+    if ($exists) {
+        // ✅ Update Existing Row
+        $pdo->prepare("
+            UPDATE royalties 
+            SET streams_count = ?, gross_amount = ?, artist_share = ?, producer_share = ?
+            WHERE music_id = ?
+        ")->execute([$streams, $gross, $artist_share, $producer_share, $music_id]);
+
+    } else {
+        // ✅ Insert New Row (NO period columns)
+        $pdo->prepare("
+            INSERT INTO royalties (music_id, streams_count, gross_amount, artist_share, producer_share, status)
+            VALUES (?, ?, ?, ?, ?, 'pending')
+        ")->execute([$music_id, $streams, $gross, $artist_share, $producer_share]);
+    }
 }
 
-echo "<h3 style='color:green; text-align:center; margin-top:40px;'>✅ Royalties successfully updated based on streams.</h3>";
-?>
+echo "<h3 style='color:green; text-align:center;margin-top:40px;'>✅ Royalties Successfully Calculated & Updated</h3>";

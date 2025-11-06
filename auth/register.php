@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/../config/bootstrap.php';
+
 if (isset($_SESSION['user'])) {
     header("Location: /harmony/dashboard/dashboard.php");
     exit;
@@ -12,26 +13,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    $role_id = (int)($_POST['role_id'] ?? 1);
+    $role_id = (int)($_POST['role_id'] ?? 0);
 
-    if (!$name || !$email || !$password) {
+    if (!$name || !$email || !$password || !$role_id) {
         $msg = "Please fill all fields.";
     } else {
         try {
-            // ✅ Verify role is not Admin (extra security)
-            $checkRole = $pdo->prepare("SELECT name FROM roles WHERE id = ?");
-            $checkRole->execute([$role_id]);
-            $roleName = $checkRole->fetchColumn();
-
-            if (strtolower($roleName) === 'admin') {
-                $msg = "❌ You cannot register as an Admin.";
-            } else {
-                $hash = password_hash($password, PASSWORD_BCRYPT);
-                $stmt = $pdo->prepare("INSERT INTO users (name,email,password,role_id) VALUES (?,?,?,?)");
-                $stmt->execute([$name, $email, $hash, $role_id]);
-                $msg = "✅ Registration successful. Please login.";
-                $msgType = 'success';
-            }
+            $hash = password_hash($password, PASSWORD_BCRYPT);
+            $stmt = $pdo->prepare("INSERT INTO users (name,email,password,role_id) VALUES (?,?,?,?)");
+            $stmt->execute([$name, $email, $hash, $role_id]);
+            $msg = "✅ Registration successful. Please login.";
+            $msgType = 'success';
         } catch (Exception $e) {
             $msg = "❌ Email already registered or an error occurred.";
         }
@@ -39,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ✅ Fetch all roles except Admin
-$roles = $pdo->query("SELECT id, name FROM roles WHERE LOWER(name) != 'admin'")->fetchAll();
+$roles = $pdo->query("SELECT id, name FROM roles WHERE LOWER(name) != 'admin' ORDER BY name")->fetchAll();
 ?>
 <!doctype html>
 <html lang="en">

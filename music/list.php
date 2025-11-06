@@ -214,8 +214,10 @@ audio {
             <td>
               <?php if (!empty($song['file_path'])): ?>
                 <audio controls preload="none">
-                  <source src="/harmony/music/<?= htmlspecialchars($song['file_path']) ?>" type="audio/mpeg">
-                </audio>
+  <source src="<?= htmlspecialchars($song['file_path']) ?>" type="audio/mpeg">
+  Your browser does not support audio playback.
+</audio>
+
               <?php else: ?>
                 <span class="text-muted">No file</span>
               <?php endif; ?>
